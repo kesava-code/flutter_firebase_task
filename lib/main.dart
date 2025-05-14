@@ -47,8 +47,29 @@ class MyApp extends StatelessWidget {
           // tested with just a hot reload.
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         ),
-        home: RegisterScreen(),
+        // The AuthCheck widget determines the initial screen based on auth state.
+        home: const AuthCheck(),
       ),
     );
+  }
+}
+
+// AuthCheck widget listens to the authentication state and navigates accordingly.
+class AuthCheck extends StatelessWidget {
+  const AuthCheck({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Listen to AuthProvider to get the current user state.
+    // No need for `listen: false` here as this widget *should* rebuild when auth state changes.
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    // If a user is logged in, show the HomeScreen.
+    if (authProvider.user != null) {
+      return const LoginScreen();
+    } else {
+      // Otherwise, show the LoginScreen.
+      return const LoginScreen();
+    }
   }
 }
