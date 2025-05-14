@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "800187264054",
+    "project_id": "flutter-firebase-task-ebcac",
+    "storage_bucket": "flutter-firebase-task-ebcac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800187264054:android:c807606e8b61764b94bc97",
+        "android_client_info": {
+          "package_name": "com.example.flutter_firebase_task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD27sjmrbsaFyuvN8RpUvmaTfrh8xi2EiA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
