@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class AuthProvider extends ChangeNotifier {
   // Firebase User object.
@@ -29,6 +30,7 @@ class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final Connectivity _connectivity = Connectivity();
 
   // Constructor: Listens for authentication state changes.
   AuthProvider() {
@@ -37,6 +39,18 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = null; // Clear errors on auth change.
       notifyListeners(); // Notify listeners.
     });
+  }
+  // Helper method to check network connectivity
+  Future<bool> _checkInternetConnectivity() async {
+    final connectivityResult = await _connectivity.checkConnectivity();
+    // The result can be a list if multiple connectivity types are active.
+    // We consider connected if at least one result is not none.
+    if (connectivityResult.contains(ConnectivityResult.none)) {
+      _errorMessage =
+          "No internet connection. Please check your network and try again.";
+      return false;
+    }
+    return true;
   }
 
   // Registers a new user.
@@ -49,6 +63,14 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+
+    // Check for internet connectivity first
+    if (!await _checkInternetConnectivity()) {
+      _isLoading = false;
+      notifyListeners(); // Notify for error message and loading state
+      return false;
+    }
+
     if (profileImage == null) {
       _isLoading = false;
       _errorMessage = "Please Select Profile Photo";
@@ -103,6 +125,13 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+
+    // Check for internet connectivity first
+    if (!await _checkInternetConnectivity()) {
+      _isLoading = false;
+      notifyListeners(); // Notify for error message and loading state
+      return false;
+    }
 
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);

@@ -168,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).primaryColor,
+                    prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Full Name',
                     hintText: 'Enter your full name',
                     prefixIcon: const Icon(Icons.person),
@@ -188,7 +188,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).primaryColor,
+                    prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Email',
                     hintText: 'Enter your email',
                     prefixIcon: const Icon(Icons.email),
@@ -212,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).primaryColor,
+                    prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Password',
                     hintText: 'Enter your password',
                     prefixIcon: const Icon(Icons.lock),
@@ -235,7 +235,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).primaryColor,
+                    prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Confirm Password',
                     hintText: 'Re-enter your password',
                     prefixIcon: const Icon(Icons.lock_outline),

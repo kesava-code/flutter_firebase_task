@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
       providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
 
       child: MaterialApp(
+        darkTheme: ThemeData.dark(),
         routes: {
           LoginScreen.routeName: (ctx) => const LoginScreen(),
           RegisterScreen.routeName: (ctx) => const RegisterScreen(),
