@@ -66,7 +66,7 @@ class AuthCheck extends StatelessWidget {
 
     // If a user is logged in, show the HomeScreen.
     if (authProvider.user != null) {
-      return const LoginScreen();
+      return const HomeScreen();
     } else {
       // Otherwise, show the LoginScreen.
       return const LoginScreen();
