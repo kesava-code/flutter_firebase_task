@@ -1,5 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+// Assuming your project structure might be 'providers/auth_provider.dart'
+// If it's directly under lib, then 'auth_provider.dart' is fine.
+// For this example, I'll use the path from your import.
 import 'package:flutter_firebase_task/providers/auth_provider.dart';
 import 'package:flutter_firebase_task/screens/home_screen.dart';
 import 'package:flutter_firebase_task/screens/login_screen.dart';
@@ -7,8 +10,11 @@ import 'package:flutter_firebase_task/screens/register_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+  // Ensure Flutter bindings are initialized before Firebase.
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Firebase.
   await Firebase.initializeApp();
+  // Run the application.
   runApp(const MyApp());
 }
 
@@ -18,10 +24,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // MultiProvider makes AuthProvider available to the widget tree.
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
-
       child: MaterialApp(
+        // Theme settings from your provided code.
         darkTheme: ThemeData.dark(),
         routes: {
           LoginScreen.routeName: (ctx) => const LoginScreen(),
@@ -29,24 +36,12 @@ class MyApp extends StatelessWidget {
           HomeScreen.routeName: (ctx) => const HomeScreen(),
         },
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Sample Task',
+        title: 'Flutter Sample Task', // Title from your provided code.
         theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // TRY THIS: Try running your application with "flutter run". You'll see
-          // the application has a purple toolbar. Then, without quitting the app,
-          // try changing the seedColor in the colorScheme below to Colors.green
-          // and then invoke "hot reload" (save your changes or press the "hot
-          // reload" button in a Flutter-supported IDE, or press "r" if you used
-          // the command line to start the app).
-          //
-          // Notice that the counter didn't reset back to zero; the application
-          // state is not lost during the reload. To reset the state, use hot
-          // restart instead.
-          //
-          // This works for code too, not just values: Most code changes can be
-          // tested with just a hot reload.
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blueAccent,
+          ), // Theme from your code.
+          // useMaterial3: true, // Consider adding useMaterial3 if you are using Material 3 features.
         ),
         // The AuthCheck widget determines the initial screen based on auth state.
         home: const AuthCheck(),
@@ -61,16 +56,24 @@ class AuthCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Add a print statement here to see when AuthCheck rebuilds.
+    print("[AuthCheck] build() called.");
+
     // Listen to AuthProvider to get the current user state.
-    // No need for `listen: false` here as this widget *should* rebuild when auth state changes.
+    // Provider.of<AuthProvider>(context) without listen: false ensures this widget rebuilds on notifyListeners().
     final authProvider = Provider.of<AuthProvider>(context);
+    print("[AuthCheck] authProvider.user: ${authProvider.user?.uid}");
 
     // If a user is logged in, show the HomeScreen.
     if (authProvider.user != null) {
-      return const HomeScreen();
+      print("[AuthCheck] User is authenticated. Showing HomeScreen.");
+      // Using a ValueKey ensures HomeScreen is treated as a new widget if it needs to be rebuilt.
+      return const HomeScreen(key: ValueKey('HomeScreen'));
     } else {
       // Otherwise, show the LoginScreen.
-      return const LoginScreen();
+      print("[AuthCheck] User is not authenticated. Showing LoginScreen.");
+      // Using a ValueKey ensures LoginScreen is treated as a new widget if it needs to be rebuilt.
+      return const LoginScreen(key: ValueKey('LoginScreen'));
     }
   }
 }

@@ -3,14 +3,14 @@
 // the UI for new user registration. It includes fields for name, email, password,
 // profile image selection, and uses AuthProvider for registration logic.
 // Handles form validation, displays loading/error states, and navigates
-// to HomeScreen on success or allows navigation back to the LoginScreen.
+// to LoginScreen on success (passing the email) or allows navigation back to LoginScreen.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For File type
 import '../providers/auth_provider.dart';
-import 'home_screen.dart';
-import 'login_screen.dart';
+// HomeScreen import is no longer needed as navigation goes to LoginScreen.
+import 'login_screen.dart'; // For navigation to LoginScreen.
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = '/register'; // Route name for navigation.
@@ -27,11 +27,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController =
       TextEditingController(); // For password confirmation.
-  final _formKey = GlobalKey<FormState>(); // Key for form validation.
+  // GlobalKey for form validation.
+  final _formKey = GlobalKey<FormState>();
 
   // Holds the selected profile image file.
   XFile? _profileImage;
-  final ImagePicker _picker = ImagePicker(); // Instance for picking images.
+  // Instance for picking images.
+  final ImagePicker _picker = ImagePicker();
 
   // Opens image gallery to pick a profile image.
   Future<void> _pickImage() async {
@@ -69,9 +71,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     // Trim whitespace from input values.
     final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim(); // Get email to pass to LoginScreen.
     final password = _passwordController.text.trim();
 
+    // Attempt to register the user using AuthProvider.
     bool success = await authProvider.register(
       name,
       email,
@@ -80,9 +83,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (success) {
-      // Navigate to HomeScreen on successful registration.
+      // If registration is successful:
       if (mounted) {
-        Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+        // Navigate to LoginScreen, replacing the current screen.
+        // Pass the registered email as an argument to LoginScreen.
+        Navigator.pushReplacementNamed(
+          context,
+          LoginScreen.routeName,
+          arguments: email, // Pass the email.
+        );
+        // Show a success message to the user.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please log in.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
       }
     } else {
       // Show error message if registration fails.
@@ -112,50 +129,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Access AuthProvider to listen for state changes (isLoading, errorMessage).
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
+      // No AppBar as per user's provided structure.
       body: Center(
         // Center the form content.
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0), // Add padding around the form.
           child: Form(
-            key: _formKey,
+            key: _formKey, // Assign the GlobalKey to the Form.
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center, // Center content vertically.
               crossAxisAlignment:
-                  CrossAxisAlignment
-                      .stretch, // Make buttons stretch to full width.
+                  CrossAxisAlignment.stretch, // Make buttons stretch to full width.
               children: [
+                // Title.
                 Text(
                   'Create Account',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge, // Style from user's code.
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 24), // Spacing.
                 // Profile Image Picker UI.
                 Center(
                   child: GestureDetector(
-                    onTap: _pickImage,
+                    onTap: _pickImage, // Call _pickImage when tapped.
                     child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.grey[300],
+                      radius: 50, // Size of the avatar.
+                      backgroundColor: Theme.of(context).colorScheme.secondary, // From user's code.
                       backgroundImage:
                           _profileImage != null
                               ? FileImage(File(_profileImage!.path))
-                              : null,
+                              : null, // Display selected image.
                       child:
                           _profileImage == null
-                              ? Icon(
-                                Icons.camera_alt,
-                                size: 40,
-                                color: Colors.grey[700],
-                              )
+                              ? Icon( // Show camera icon if no image.
+                                  Icons.camera_alt,
+                                  size: 40,
+                                  color:
+                                      Theme.of(context).colorScheme.onSecondary, // From user's code.
+                                )
                               : null,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 8), // Spacing.
+                // Text instruction for image picker.
                 Center(
                   child: Text(
                     _profileImage == null
@@ -164,11 +185,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(color: Theme.of(context).primaryColor),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 24), // Spacing.
+                // Name Text Field.
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).colorScheme.primary,
+                    prefixIconColor: Theme.of(context).colorScheme.primary, // From user's code.
                     labelText: 'Full Name',
                     hintText: 'Enter your full name',
                     prefixIcon: const Icon(Icons.person),
@@ -176,19 +198,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  validator: (value) {
+                  validator: (value) { // Name validation.
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your name.';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 16), // Spacing.
+                // Email Text Field.
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).colorScheme.primary,
+                    prefixIconColor: Theme.of(context).colorScheme.primary, // From user's code.
                     labelText: 'Email',
                     hintText: 'Enter your email',
                     prefixIcon: const Icon(Icons.email),
@@ -196,23 +219,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  validator: (value) {
+                  validator: (value) { // Email validation.
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email.';
                     }
                     if (!value.contains('@') || !value.contains('.')) {
                       return 'Please enter a valid email address.';
                     }
-                    // More sophisticated email validation could be added here.
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 16), // Spacing.
+                // Password Text Field.
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: true, // Hide password text.
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).colorScheme.primary,
+                    prefixIconColor: Theme.of(context).colorScheme.primary, // From user's code.
                     labelText: 'Password',
                     hintText: 'Enter your password',
                     prefixIcon: const Icon(Icons.lock),
@@ -220,7 +243,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  validator: (value) {
+                  validator: (value) { // Password validation.
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a password.';
                     }
@@ -230,12 +253,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 16), // Spacing.
+                // Confirm Password Text Field.
                 TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
+                  obscureText: true, // Hide password text.
                   decoration: InputDecoration(
-                    prefixIconColor: Theme.of(context).colorScheme.primary,
+                    prefixIconColor: Theme.of(context).colorScheme.primary, // From user's code.
                     labelText: 'Confirm Password',
                     hintText: 'Re-enter your password',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -243,7 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  validator: (value) {
+                  validator: (value) { // Confirm password validation.
                     if (value == null || value.trim().isEmpty) {
                       return 'Please confirm your password.';
                     }
@@ -253,62 +277,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 24), // Spacing.
+                // Register Button.
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context).colorScheme.primary, // From user's code.
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
                   onPressed:
-                      authProvider.isLoading ? null : () => _register(context),
+                      authProvider.isLoading ? null : () => _register(context), // Disable if loading.
                   child:
                       authProvider.isLoading
-                          ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                          ? SizedBox( // Show progress indicator when loading.
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.onPrimary, // From user's code.
+                              ),
+                            )
+                          : Text( // Show "Register" text.
+                              'Register',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onPrimary, // From user's code.
+                              ),
                             ),
-                          )
-                          : Text(
-                            'Register',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 16), // Spacing.
+                // Navigation to Login Screen.
                 TextButton(
                   onPressed:
                       authProvider.isLoading
-                          ? null
+                          ? null // Disable if loading.
                           : () {
-                            // Navigate back to the LoginScreen.
-                            Navigator.pushReplacementNamed(
-                              context,
-                              LoginScreen.routeName,
-                            );
-                          },
-                  child: Row(
+                              // Navigate back to the LoginScreen, replacing current screen.
+                              Navigator.pushReplacementNamed(
+                                context,
+                                LoginScreen.routeName,
+                              );
+                            },
+                  child: Row( // Structure from user's code.
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'Already have an account?',
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: Theme.of(context).textTheme.titleSmall, // Style from user's code.
                       ),
-                      Text(' Login'),
+                      const Text(' Login'), // Added space for better visual.
                     ],
                   ),
                 ),
-                // Display error message from AuthProvider, if any, and not loading.
+                // Display error message (commented out as per user's code).
                 // if (authProvider.errorMessage != null &&
-                //     `!authProvider.isLoading)
+                //     !authProvider.isLoading)
                 //   Padding(
                 //     padding: const EdgeInsets.only(top: 16.0),
                 //     child: Text(

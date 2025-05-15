@@ -29,15 +29,6 @@ class HomeScreen extends StatelessWidget {
             onPressed: () async {
               await authProvider.logout();
               // The AuthCheck widget will handle navigation to LoginScreen
-              // so, explicit navigation here might be redundant if AuthCheck is effective.
-              // However, to ensure immediate navigation:
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  (Route<dynamic> route) => false, // Remove all routes below
-                );
-              }
             },
           ),
           SizedBox(width: 10),
