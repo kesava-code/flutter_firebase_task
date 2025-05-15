@@ -3,94 +3,100 @@
 // for user login. It includes email and password fields, utilizes AuthProvider
 // for authentication, and handles form validation. Displays loading states and
 // error messages. Navigation to HomeScreen is handled by AuthCheck based on
-// AuthProvider's state. Can pre-fill email and focus password if navigated
-// from registration.
+// AuthProvider's state. Can pre-fill email (from AuthProvider state) and
+// focus password if navigated from registration.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import 'register_screen.dart';
-// HomeScreen import is not needed here as AuthCheck handles navigation to it.
+import 'register_screen.dart'; // For "CREATE ACCOUNT" button navigation
 
 class LoginScreen extends StatefulWidget {
-  static const routeName = '/login'; // Route name for navigation.
-  final String?
-  emailFromRegistration; // Optional: To accept email if passed via constructor
-
-  const LoginScreen({super.key, this.emailFromRegistration});
+  static const routeName = '/login';
+  // Constructor no longer needs emailFromRegistration, will get from Provider.
+  const LoginScreen({super.key});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Controllers for text input fields.
+  // Controllers for text input fields
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  // GlobalKey for form validation.
+  // GlobalKey for form validation
   final _formKey = GlobalKey<FormState>();
-  // FocusNode to programmatically focus the password field.
+  // FocusNode to programmatically focus the password field
   final _passwordFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    // Check if email was passed from registration screen via constructor argument.
-    if (widget.emailFromRegistration != null &&
-        widget.emailFromRegistration!.isNotEmpty) {
-      _emailController.text = widget.emailFromRegistration!;
-      // Request focus on password field after the first frame renders.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Try to pre-fill email after the first frame has been built.
+    // This ensures that context is available and AuthProvider can be accessed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybePrefillEmailAndFocus();
+    });
+  }
+
+  void _maybePrefillEmailAndFocus() {
+    if (!mounted) return; // Ensure widget is still in the tree.
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final emailToPrefill = authProvider.emailAfterRegistration;
+
+    print(
+      "[LoginScreen] _maybePrefillEmailAndFocus called. Email from provider: $emailToPrefill",
+    );
+
+    if (emailToPrefill != null && emailToPrefill.isNotEmpty) {
+      _emailController.text = emailToPrefill;
+      // Important: Clear the email from AuthProvider state after consuming it.
+      authProvider.clearEmailAfterRegistration();
+      // Request focus on the password field.
+      if (mounted) {
+        // Check mounted again before requesting focus
+        FocusScope.of(context).requestFocus(_passwordFocusNode);
+      }
+    }
+    // Fallback: Check for route arguments (can be removed if only using AuthProvider state for this)
+    // For now, this provides a secondary way if LoginScreen is pushed with arguments directly.
+    else {
+      final arguments = ModalRoute.of(context)?.settings.arguments;
+      if (arguments is String &&
+          arguments.isNotEmpty &&
+          _emailController.text.isEmpty) {
+        _emailController.text = arguments;
         if (mounted) {
-          // Ensure the widget is still in the tree.
           FocusScope.of(context).requestFocus(_passwordFocusNode);
         }
-      });
+      }
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Check if arguments were passed via Navigator.pushNamed's arguments parameter
-    // and if the email controller is still empty (e.g., not set by constructor).
-    final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is String &&
-        arguments.isNotEmpty &&
-        _emailController.text.isEmpty) {
-      _emailController.text = arguments;
-      // Request focus on password field after the first frame renders.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          // Ensure the widget is still in the tree.
-          FocusScope.of(context).requestFocus(_passwordFocusNode);
-        }
-      });
-    }
-  }
-
-  // Handles the user login process.
+  // Handles the user login process
   void _login(BuildContext context) async {
-    // Clear any previous error messages.
+    // Clear any previous error messages from AuthProvider
     Provider.of<AuthProvider>(context, listen: false).clearErrorMessage();
 
-    // Validate the form. If invalid, do not proceed.
+    // Validate the form fields
     if (!(_formKey.currentState?.validate() ?? false)) {
-      return;
+      return; // If form is not valid, do not proceed.
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // Trim whitespace from input values.
+    // Trim whitespace from inputs.
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // Attempt to log in using AuthProvider.
+    // Attempt to log in
     bool success = await authProvider.login(email, password);
 
     if (success) {
+      Navigator.popUntil(context, ModalRoute.withName('/'));
       // Navigation to HomeScreen is handled by AuthCheck widget
       // based on AuthProvider's user state. No explicit navigation here.
     } else {
-      // Show error message via SnackBar if login fails.
+      // If login fails, show an error message using SnackBar.
       if (mounted && authProvider.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -106,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    // Dispose controllers and FocusNode to free resources.
+    // Dispose controllers and focus node to free up resources
     _emailController.dispose();
     _passwordController.dispose();
     _passwordFocusNode.dispose();
@@ -115,45 +121,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Access AuthProvider to listen for state changes (isLoading, errorMessage).
+    // Access AuthProvider to listen for changes in isLoading or errorMessage for the UI.
     final authProvider = Provider.of<AuthProvider>(context);
 
+    // Using the UI structure from user's previous LoginScreen example
     return Scaffold(
-      // No AppBar as per user's provided structure.
-      // If an AppBar were added, automaticallyImplyLeading: false would be recommended
-      // because AuthCheck handles the primary navigation flow.
       body: Center(
-        // Center the form content.
         child: SingleChildScrollView(
-          // Allow scrolling for smaller screens.
-          padding: const EdgeInsets.all(24.0), // Add padding around the form.
+          padding: const EdgeInsets.all(24.0),
           child: Form(
-            key: _formKey, // Assign the GlobalKey to the Form.
+            key: _formKey,
             child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center, // Center content vertically.
-              crossAxisAlignment:
-                  CrossAxisAlignment.stretch, // Make buttons stretch.
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Welcome message.
                 Text(
                   'Welcome Back!',
-                  style:
-                      Theme.of(context)
-                          .textTheme
-                          .titleLarge, // Using titleLarge from user's code.
+                  style: Theme.of(context).textTheme.titleLarge,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24), // Spacing.
-                // Email Text Field.
+                const SizedBox(height: 24),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    prefixIconColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary, // From user's code.
+                    prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Email',
                     hintText: 'Enter your email',
                     prefixIcon: const Icon(Icons.email),
@@ -162,7 +154,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: (value) {
-                    // Email validation.
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email.';
                     }
@@ -172,17 +163,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16), // Spacing.
-                // Password Text Field.
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  focusNode: _passwordFocusNode, // Assign the FocusNode.
-                  obscureText: true, // Hide password text.
+                  focusNode: _passwordFocusNode,
+                  obscureText: true,
                   decoration: InputDecoration(
-                    prefixIconColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary, // From user's code.
+                    prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Password',
                     hintText: 'Enter your password',
                     prefixIcon: const Icon(Icons.lock),
@@ -191,7 +178,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: (value) {
-                    // Password validation.
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your password.';
                     }
@@ -201,80 +187,59 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24), // Spacing.
-                // Login Button.
+                const SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary, // From user's code.
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  // Disable button while loading, otherwise call _login.
                   onPressed:
                       authProvider.isLoading ? null : () => _login(context),
                   child:
                       authProvider.isLoading
                           ? SizedBox(
-                            // Show progress indicator when loading.
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary, // From user's code.
+                              color: Theme.of(context).colorScheme.onPrimary,
                             ),
                           )
                           : Text(
-                            // Show "Login" text.
                             'Login',
                             style: TextStyle(
                               fontSize: 16,
-                              color:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary, // From user's code.
+                              color: Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
                 ),
-                const SizedBox(height: 16), // Spacing.
-                // Navigation to Register Screen.
+                const SizedBox(height: 16),
                 TextButton(
                   onPressed:
                       authProvider.isLoading
-                          ? null // Disable if loading.
+                          ? null
                           : () {
-                            // Navigate to the RegisterScreen.
-                            // Using pushReplacementNamed to replace LoginScreen in the stack,
-                            // which is often cleaner for auth flows.
-                            Navigator.pushReplacementNamed(
+                            // Explicit navigation to RegisterScreen is fine here.
+                            Navigator.pushNamed(
                               context,
                               RegisterScreen.routeName,
                             );
                           },
                   child: Text(
-                    "CREATE ACCOUNT", // Text from user's code.
-                    style:
-                        Theme.of(
-                          context,
-                        ).textTheme.titleSmall, // Style from user's code.
+                    "CREATE ACCOUNT",
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
-                // Display error message directly on screen (commented out as per user's code).
-                // if (authProvider.errorMessage != null &&
-                //     `!authProvider.isLoading)
+                // Optional: Inline error message display
+                // if (authProvider.errorMessage != null && !authProvider.isLoading)
                 //   Padding(
                 //     padding: const EdgeInsets.only(top: 16.0),
                 //     child: Text(
                 //       authProvider.errorMessage!,
-                //       style: const TextStyle(
-                //           color: Colors.red, fontWeight: FontWeight.bold),
+                //       style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                 //       textAlign: TextAlign.center,
                 //     ),
                 //   ),
