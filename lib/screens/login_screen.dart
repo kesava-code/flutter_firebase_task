@@ -27,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   // FocusNode to programmatically focus the password field
   final _passwordFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -69,6 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           FocusScope.of(context).requestFocus(_passwordFocusNode);
         }
+      } else if (mounted) {
+        // If no pre-fill, focus the email field initially.
+        FocusScope.of(context).requestFocus(_emailFocusNode);
       }
     }
   }
@@ -82,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return; // If form is not valid, do not proceed.
     }
-
+    FocusScope.of(context).unfocus();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     // Trim whitespace from inputs.
     final email = _emailController.text.trim();
@@ -143,6 +147,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _emailController,
+
+                  focusNode: _emailFocusNode,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -161,6 +167,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       return 'Please enter a valid email address.';
                     }
                     return null;
+                  },
+                  onFieldSubmitted: (_) {
+                    // When "next" is pressed
+                    FocusScope.of(context).requestFocus(_passwordFocusNode);
                   },
                 ),
                 const SizedBox(height: 16),
@@ -186,6 +196,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     }
                     return null;
                   },
+                  onFieldSubmitted: (_) {
+                    authProvider.isLoading ? null : _login(context);
+                  },
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -205,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           )
                           : Text(

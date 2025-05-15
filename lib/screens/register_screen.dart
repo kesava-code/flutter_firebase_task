@@ -27,6 +27,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _nameFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
   // GlobalKey for form validation
   final _formKey = GlobalKey<FormState>();
 
@@ -81,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success) {
       // If registration is successful
       if (mounted) {
-         Navigator.popUntil(context, ModalRoute.withName('/'));
+        Navigator.popUntil(context, ModalRoute.withName('/'));
         // NO EXPLICIT NAVIGATION TO LOGIN SCREEN HERE.
         // AuthProvider.register() now signs out the user and sets _emailAfterRegistration.
         // AuthCheck will see the user is null and show LoginScreen.
@@ -175,7 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  textCapitalization: TextCapitalization.words,
                   controller: _nameController,
+                  focusNode: _nameFocusNode,
                   decoration: InputDecoration(
                     prefixIconColor: Theme.of(context).colorScheme.primary,
                     labelText: 'Full Name',
@@ -191,10 +197,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     return null;
                   },
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context).requestFocus(_emailFocusNode);
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
+                  focusNode: _emailFocusNode,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -214,10 +224,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     return null;
                   },
+                  onFieldSubmitted: (value) {
+                    FocusScope.of(context).requestFocus(_passwordFocusNode);
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
+                  focusNode: _passwordFocusNode,
                   obscureText: true,
                   decoration: InputDecoration(
                     prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -237,10 +251,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     return null;
                   },
+                  onFieldSubmitted: (value) {
+                    FocusScope.of(
+                      context,
+                    ).requestFocus(_confirmPasswordFocusNode);
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmPasswordController,
+                  focusNode: _confirmPasswordFocusNode,
                   obscureText: true,
                   decoration: InputDecoration(
                     prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -259,6 +279,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return 'Passwords do not match.';
                     }
                     return null;
+                  },
+                  onFieldSubmitted: (value) {
+                    authProvider.isLoading ? null : _register(context);
                   },
                 ),
                 const SizedBox(height: 24),
@@ -279,7 +302,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                             ),
                           )
                           : Text(
@@ -297,10 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? null
                           : () {
                             // Explicit navigation to LoginScreen is fine here for this button.
-                            Navigator.pushNamed(
-                              context,
-                              LoginScreen.routeName,
-                            );
+                            Navigator.pushNamed(context, LoginScreen.routeName);
                           },
                   child: Row(
                     mainAxisSize: MainAxisSize.max,

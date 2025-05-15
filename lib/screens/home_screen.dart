@@ -10,6 +10,13 @@ class HomeScreen extends StatelessWidget {
   static const routeName = '/home';
   const HomeScreen({super.key});
 
+  String capitalizeFirstLetter(String text) {
+    if (text.isEmpty) {
+      return text;
+    }
+    return '${text[0].toUpperCase()}${text.substring(1)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     // Access AuthProvider, listen: false because we only need it for the logout action.
@@ -76,7 +83,8 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Welcome, ${userData['name'] ?? 'User'}!",
+                            "Welcome, ${userData['name'] ?? 'User'}!"
+                                .toUpperCase(),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(
@@ -153,7 +161,10 @@ class HomeScreen extends StatelessWidget {
                                       ? CachedNetworkImageProvider(
                                         data['profileImageUrl'],
                                       )
-                                      : null, // Explicitly null if no image
+                                      : null,
+                              backgroundColor:
+                                  Colors
+                                      .grey[200], // Explicitly null if no image
                               // Show a placeholder icon if no image URL is available.
                               child:
                                   data['profileImageUrl'] == null
@@ -161,12 +172,10 @@ class HomeScreen extends StatelessWidget {
                                         Icons.person_outline,
                                         size: 25,
                                       )
-                                      : null,
-                              backgroundColor:
-                                  Colors.grey[200], // Background for the avatar
+                                      : null, // Background for the avatar
                             ),
                             title: Text(
-                              data['name'] ?? 'No Name Provided',
+                              capitalizeFirstLetter(data['name']),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w500,
                               ),
