@@ -1,11 +1,10 @@
-import 'dart:developer';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 // Assuming your project structure might be 'providers/auth_provider.dart'
 // If it's directly under lib, then 'auth_provider.dart' is fine.
 // For this example, I'll use the path from your import.
 import 'package:flutter_firebase_task/providers/auth_provider.dart';
+import 'package:flutter_firebase_task/providers/user_list_provider.dart';
 import 'package:flutter_firebase_task/screens/home_screen.dart';
 import 'package:flutter_firebase_task/screens/login_screen.dart';
 import 'package:flutter_firebase_task/screens/register_screen.dart';
@@ -28,7 +27,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // MultiProvider makes AuthProvider available to the widget tree.
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserListProvider()),
+      ],
       child: MaterialApp(
         // Theme settings from your provided code.
         darkTheme: ThemeData.dark(),
@@ -66,29 +68,16 @@ class AuthCheck extends StatefulWidget {
 class _AuthCheckState extends State<AuthCheck> {
   @override
   Widget build(BuildContext context) {
-    // This outer print helps see if AuthCheck itself is rebuilt for other reasons.
-    print("[AuthCheck] build() called (outside Consumer).");
-
     // Consumer widget rebuilds its 'builder' when AuthProvider notifies listeners.
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         // This print is crucial: it shows when the part dependent on AuthProvider rebuilds.
-        log(
-          "[AuthCheck Consumer] builder called. User: ${authProvider.user?.uid}",
-        );
 
         // If a user is logged in, show the HomeScreen.
         if (authProvider.user != null) {
-          print(
-            "[AuthCheck Consumer] User is authenticated. Showing HomeScreen.",
-          );
           // Using a ValueKey ensures HomeScreen is treated as a new widget if it needs to be rebuilt.
           return const HomeScreen(key: ValueKey('HomeScreen'));
         } else {
-          // Otherwise, show the LoginScreen.
-          print(
-            "[AuthCheck Consumer] User is not authenticated. Showing LoginScreen.",
-          );
           // Using a ValueKey ensures LoginScreen is treated as a new widget if it needs to be rebuilt.
           return const LoginScreen(key: ValueKey('LoginScreen'));
         }

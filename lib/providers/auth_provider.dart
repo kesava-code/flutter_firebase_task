@@ -34,9 +34,9 @@ class AuthProvider extends ChangeNotifier {
   final Connectivity _connectivity = Connectivity();
 
   AuthProvider() {
-    print("[AuthProvider] Initializing and subscribing to authStateChanges.");
+   
     _auth.authStateChanges().listen((User? firebaseUser) {
-      print("[AuthProvider] authStateChanges event. New Firebase User: ${firebaseUser?.uid}. Current _user before change: ${_user?.uid}");
+     
       if (_user != firebaseUser) {
         _user = firebaseUser;
         // Don't clear _errorMessage here if firebaseUser is null,
@@ -46,11 +46,9 @@ class AuthProvider extends ChangeNotifier {
         if (firebaseUser != null) {
             _errorMessage = null;
         }
-        print("[AuthProvider] User state IS different. Updating _user to ${firebaseUser?.uid} and calling notifyListeners().");
+       
         notifyListeners();
-      } else {
-        print("[AuthProvider] User state is the same as new Firebase User. No update or notification from here.");
-      }
+      } 
     });
   }
 
@@ -110,7 +108,7 @@ class AuthProvider extends ChangeNotifier {
 
         // Set the email for LoginScreen to pick up
         _emailAfterRegistration = email;
-        print("[AuthProvider] Registration successful, emailForLogin set: $_emailAfterRegistration");
+       
 
         await _auth.signOut(); // This will trigger authStateChanges
       } else {
@@ -173,7 +171,7 @@ class AuthProvider extends ChangeNotifier {
   // Method for LoginScreen to call after consuming the email.
   void clearEmailAfterRegistration() {
     if (_emailAfterRegistration != null) {
-      print("[AuthProvider] Clearing emailAfterRegistration: $_emailAfterRegistration");
+     
       _emailAfterRegistration = null;
       // Optionally notify listeners if any UI specifically depends on _emailAfterRegistration,
       // but for pre-filling, it's usually a one-time read.

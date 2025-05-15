@@ -45,9 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final emailToPrefill = authProvider.emailAfterRegistration;
 
-    print(
-      "[LoginScreen] _maybePrefillEmailAndFocus called. Email from provider: $emailToPrefill",
-    );
+   
 
     if (emailToPrefill != null && emailToPrefill.isNotEmpty) {
       _emailController.text = emailToPrefill;
@@ -96,7 +94,10 @@ class _LoginScreenState extends State<LoginScreen> {
     bool success = await authProvider.login(email, password);
 
     if (success) {
-      Navigator.popUntil(context, ModalRoute.withName('/'));
+      if(mounted) {
+Navigator.popUntil(context, ModalRoute.withName('/'));
+      }
+      
       // Navigation to HomeScreen is handled by AuthCheck widget
       // based on AuthProvider's user state. No explicit navigation here.
     } else {
